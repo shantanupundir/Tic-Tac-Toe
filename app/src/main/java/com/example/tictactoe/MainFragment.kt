@@ -1,59 +1,140 @@
 package com.example.tictactoe
 
+import android.app.AlertDialog
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.Toast
+import com.example.tictactoe.databinding.FragmentMainBinding
+import com.example.tictactoe.databinding.WinDialogBinding
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [MainFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class MainFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private var _binding: FragmentMainBinding? = null
+    private val binding get() = _binding!!
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private var currentPlayer = "X"
+    private var board = Array(3) { Array(3){""} }
+    private lateinit var buttons: Array<Array<Button>>
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_main, container, false)
+    ): View {
+        _binding = FragmentMainBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment MainFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            MainFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        buttons = arrayOf(
+            arrayOf(binding.btn1,binding.btn2,binding.btn3),
+            arrayOf(binding.btn4,binding.btn5,binding.btn6),
+            arrayOf(binding.btn7,binding.btn8,binding.btn9)
+        )
+        for (i in 0..2){
+            for (j in 0..2){
+                buttons[i][j].setOnClickListener {
+                    onCellClicked(i, j, buttons[i][j])
                 }
             }
+        }
     }
+    private fun onCellClicked(row: Int, col: Int, button: Button) {
+        if (board[row][col].isNotEmpty()) {
+            Toast.makeText(requireContext(), "Cell already occupied!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        board[row][col] = currentPlayer
+        button.text = currentPlayer
+
+        if (checkWinner(currentPlayer)) {
+            showWinnerDialog(currentPlayer)
+            resetBoard()
+            return
+        }
+
+        if (isBoardFull()) {
+            Toast.makeText(requireContext(), "It's a draw!", Toast.LENGTH_LONG).show()
+            resetBoard()
+            return
+        }
+
+        // Switch Player
+        currentPlayer = if (currentPlayer == "X") "O" else "X"
+    }
+
+    private fun checkWinner(player: String): Boolean {
+        // Rows
+        for (i in 0..2) {
+            if (board[i][0] == player && board[i][1] == player && board[i][2] == player) return true
+        }
+        // Columns
+        for (j in 0..2) {
+            if (board[0][j] == player && board[1][j] == player && board[2][j] == player) return true
+        }
+        // Diagonals
+        if (board[0][0] == player && board[1][1] == player && board[2][2] == player) return true
+        if (board[0][2] == player && board[1][1] == player && board[2][0] == player) return true
+
+        return false
+    }
+
+    private fun isBoardFull(): Boolean {
+        for (i in 0..2) {
+            for (j in 0..2) {
+                if (board[i][j].isEmpty()) return false
+            }
+        }
+        return true
+    }
+
+    private fun resetBoard() {
+        board = Array(3) { Array(3) { "" } }
+        for (i in 0..2) {
+            for (j in 0..2) {
+                buttons[i][j].text = ""
+            }
+        }
+        currentPlayer = "X"
+    }
+    private fun showWinnerDialog(winner: String) {
+        // Binding से dialog का layout inflate करो
+        val dialogBinding = WinDialogBinding.inflate(layoutInflater)
+
+        // Winner का नाम set करो
+        dialogBinding.winText.text = "Player $winner Wins 🎉"
+
+        // AlertDialog बनाओ
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogBinding.root)
+            .setCancelable(false)
+            .create()
+
+        // Cancel button → Dialog dismiss
+        dialogBinding.btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        // Restart button → Board reset + dialog dismiss
+        dialogBinding.btnRestart.setOnClickListener {
+            resetBoard()
+            dialog.dismiss()
+        }
+
+        // Dialog show करो
+        dialog.show()
+    }
+
+
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
 }

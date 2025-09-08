@@ -63,21 +63,16 @@ class MainFragment : Fragment() {
             resetBoard()
             return
         }
-
-        // Switch Player
         currentPlayer = if (currentPlayer == "X") "O" else "X"
     }
 
     private fun checkWinner(player: String): Boolean {
-        // Rows
         for (i in 0..2) {
             if (board[i][0] == player && board[i][1] == player && board[i][2] == player) return true
         }
-        // Columns
         for (j in 0..2) {
             if (board[0][j] == player && board[1][j] == player && board[2][j] == player) return true
         }
-        // Diagonals
         if (board[0][0] == player && board[1][1] == player && board[2][2] == player) return true
         if (board[0][2] == player && board[1][1] == player && board[2][0] == player) return true
 
@@ -103,30 +98,21 @@ class MainFragment : Fragment() {
         currentPlayer = "X"
     }
     private fun showWinnerDialog(winner: String) {
-        // Binding से dialog का layout inflate करो
         val dialogBinding = WinDialogBinding.inflate(layoutInflater)
 
-        // Winner का नाम set करो
         dialogBinding.winText.text = "Player $winner Wins 🎉"
-
-        // AlertDialog बनाओ
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogBinding.root)
             .setCancelable(false)
             .create()
-
-        // Cancel button → Dialog dismiss
         dialogBinding.btnCancel.setOnClickListener {
             dialog.dismiss()
         }
 
-        // Restart button → Board reset + dialog dismiss
         dialogBinding.btnRestart.setOnClickListener {
             resetBoard()
             dialog.dismiss()
         }
-
-        // Dialog show करो
         dialog.show()
     }
 
